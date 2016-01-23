@@ -1,0 +1,26 @@
+.axis path,
+.axis line {
+	fill: none;
+	stroke: #bdc3c7;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 12px;
+	opacity: 0.3;
+	stroke-width: 1.0;
+	stroke: #ecf0f1;
+}
+
+.graph {
+    margin: 20px;
+    width: 700px;
+    height: 700px;
+	background-color: #404040;
+}
+
+.equation-input {
+	width: 400px;
+	font-size: 25px;
+}
+
