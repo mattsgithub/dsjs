@@ -4,16 +4,107 @@
 
 window.ds = {version : "1.0"};
 
-(function create_graph_package(ml) {
 
-    ml.graph = {};
+(function create_numerical_package(ds) {
+    ds.numeric = {};
+
+    ds.numeric.is_stable = function(fn, x) {
+        var h = 0.01;
+        return Math.sign(fn(x + h) - fn(x)) == -1;
+    };
+    
+    ds.numeric.get_absolute_error = function(x, y) {
+    	return Math.abs(x-y);
+    };
+
+    ds.numeric.arange = function(x_lower, x_upper, step) {
+	/*
+	 * Mimics the functionality from numpy.arange
+	 */
+        var x_array = [];
+	var x = x_lower;
+
+	if (x_upper < x_lower) {
+	    throw "x_upper cannot be lower than x_lower";
+	}
+
+	if (step <= 0.0) {
+	    throw "step cannot be less than or equal to 0";
+	}
+	
+	for(var i = 0; x < x_upper; i++) {
+	    x = x_lower + i*step;
+	    x_array.push(x);
+	}
+
+	return x_array;
+    };
+
+    ds.numeric.get_roots = function(fn, x_lower, x_upper, algorithm) {
+	var roots;
+	if (algorithm.toLowerCase() === "bisection") {
+	    roots = get_roots_using_bisection_algorithm(fn, x_lower, x_upper);
+	} else {
+	    throw "algorithm not supported";
+	}
+
+	return roots;
+    };
+
+    var get_roots_using_bisection_algorithm = function (fn, x_lower, x_upper) {
+        var get_root = function(fn, x_lower, x_upper, x_root) {
+	    
+	    var eps = 0.01;
+            var x_mid = (x_lower + x_upper) / 2.0;
+            var r;
+
+            if ( fn(x_lower) * fn(x_mid) <= 0.0 ) {
+                r = (x_lower + x_mid) / 2.0;
+                if (x_root === undefined) {
+                    x_root = r;
+                } else if (ds.numeric.get_absolute_error(x_root, r) < eps) {
+                    return r;
+                }
+
+                return get_root(fn, x_lower, x_mid, r);
+            } else if ( fn(x_mid) * fn(x_upper) <= 0.0 ) {
+                r = (x_mid + x_upper) / 2.0;
+                if (x_root === undefined) {
+                    x_root = r;
+                } else if (ds.numeric.get_absolute_error(x_root, r) < eps) {
+                    return r;
+		}
+
+                return get_root(fn, x_mid, x_upper, x_root);
+            }
+            return r;
+        };
+
+        var roots = [];
+	var step = 0.1;
+	var x = ds.numeric.arange(x_lower, x_upper, step);
+	for(var i = 1; i < x.length; i++) {
+	    if (fn(x[i-1]) * fn(x[i]) <= 0.0) {
+                roots.push(get_root(fn, x[i-1], x[i]));
+		i += 1;
+	    }
+	} // end for
+
+	return roots;
+    }	    
+})(window.ds);
+
+
+(function create_graph_package(ds) {
+
+    ds.graph = {};
 
     /* Helper functions */
     function getLineForPath(x1, y1, x2, y2) {
             return "M" + x1 + "," + y1 + " L" + x2 +"," + y2 +"";
     }
 
-    ml.graph.Parameter = Parameter
+    ds.graph.Parameter = Parameter
     function Parameter(name) {
         this._name = name;
         this._value;
@@ -36,7 +127,7 @@ window.ds = {version : "1.0"};
         }
     }
 
-    ml.graph.VectorField = VectorField;
+    ds.graph.VectorField = VectorField;
     function VectorField(name, value, g) {
         this._name = name;
         this._value = value;
@@ -85,7 +176,6 @@ window.ds = {version : "1.0"};
     VectorField.prototype.zoom = function() {
 
         var s = d3.event.scale;
-        console.log(s);
         var pixel_width = 700; // A constant
         var num_width = 8.0/s;
 
@@ -121,9 +211,59 @@ window.ds = {version : "1.0"};
         this._parameters[name] = value;
     }
 
+   
 
 
-    ml.graph.Function = Function;
+    ds.graph.FixedPoints = FixedPoints;
+    function FixedPoints(name, value, g) {
+        this._name = name;
+	    this._value = value;
+	    this._xlim = [-4.0, 4.0];
+	    this._parameters = {};
+	    this._graph = g;
+    }
+
+    FixedPoints.prototype.visualize = function() {
+        var selection = this._graph._svg.selectAll("#" + this._name + " circle");
+	    var roots;
+	    var data = [];
+	
+	    for(var p in this._parameters) {
+	        // TODO: Find better way to do this. Don't attach to global scope
+	        window[p] = this._parameters[p];
+	    };
+
+	    var fn = function(x) {
+	        return eval(this._value);
+	    };
+
+	    roots = ds.numeric.get_roots(fn.bind(this), this._xlim[0], this._xlim[1], "bisection");
+
+	    for (var i = 0; i < roots.length; i++) {
+	        data.push({'x' : roots[i], 'y' : 0.0, 'stable' : ds.numeric.is_stable(fn.bind(this), roots[i])});
+	    };
+
+	    if (selection.empty()) {
+	        this._graph.plot_fixed_points(this._name, data, 10.0, "yellow");
+	    } else {
+	        selection.data(data)
+		        .attr("cx", (function(d) {return this._graph._xScale(d.x)}).bind(this))
+                .attr("cy", (function(d) {return this._graph._yScale(d.y)}).bind(this));
+	    }
+    }
+
+    FixedPoints.prototype.zoom = function() {
+        var selection = this._graph._svg.selectAll("#" + this._name + " circle");
+        selection.attr("cx", (function(d) {return this._graph._xScale(d.x)}).bind(this))
+        selection.attr("cy", (function(d) {return this._graph._yScale(d.y)}).bind(this));
+    }
+
+    FixedPoints.prototype.set_parameter = function(name, value) {
+        this._parameters[name] = value;
+    }
+
+
+    ds.graph.Function = Function;
     function Function(name, value, g) {
         this._name = name;
         this._value = value;
@@ -169,7 +309,7 @@ window.ds = {version : "1.0"};
         this._parameters[name] = value;
     }
 
-    ml.graph.Graph = Graph;
+    ds.graph.Graph = Graph;
 
     function Graph(element_id) {
        this._svg;
@@ -318,6 +458,16 @@ window.ds = {version : "1.0"};
         this._functions[name] = fn;
     }
 
+    Graph.prototype.register_fixed_points = function(name, value) {
+	var fn = new FixedPoints(name, value, this);
+	    
+	// Register to lister fo parameter change
+	for (var k in this._parameters) {
+	    if(value.indexOf(k) !== -1) {
+	        this._parameters[k].add_observer(fn);
+	    }
+	}
+    }
 
     Graph.prototype.register_vector_field = function(name, value) {
         var vf = new VectorField(name, value, this);
@@ -350,6 +500,20 @@ window.ds = {version : "1.0"};
                    .append("circle")
                    .attr("stroke", color)
                    .attr("fill", color)
+                   .attr("cx", (function(d) {return this._xScale(d.x)}).bind(this))
+                   .attr("cy", (function(d) {return this._yScale(d.y)}).bind(this))
+                   .attr("r", r);
+    }
+
+    Graph.prototype.plot_fixed_points = function(name, data, r, color) {
+          this._svg.append("g")
+                   .attr("id", name)
+                   .selectAll("circle")
+                   .data(data)
+                   .enter()
+                   .append("circle")
+                   .attr("stroke", color)
+                   .attr("fill", (function(d) {if (d.stable) return color; else return "none";}))
                    .attr("cx", (function(d) {return this._xScale(d.x)}).bind(this))
                    .attr("cy", (function(d) {return this._yScale(d.y)}).bind(this))
                    .attr("r", r);

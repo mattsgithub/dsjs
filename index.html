@@ -20,14 +20,12 @@
 
     <!-- jQuery-UI -->
     <link rel="stylesheet" href="bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css">
-
-    <!-- dsjs CSS -->
-    <link rel="stylesheet" type="text/css" href="ds.css">
     
     <!-- Custom styles for this template -->
-    <link href="index.css" rel="stylesheet">
+    <!--<link href="index.css" rel="stylesheet">-->
 
-
+      <!-- dsjs CSS -->
+    <link rel="stylesheet" type="text/css" href="ds.css">
 
 
 
@@ -69,12 +67,11 @@
 	      <div class="col-md-4 col-md-offset-4">Bifurcation Diagram</div>
       </div>
       <div class="row">
-	      <div class="col-md-4"><span id="graph"></span></div>
-	      <div class="col-md-4 col-md-offset-4"><span id="bifurcation_diagram"></span></div>
+	      <div class="col-md-4 ds-graph"><span id="graph"></span></div>
+	      <div class="col-md-4 col-md-offset-4 ds-graph"><span id="bifurcation_diagram"></span></div>
       </div>
       <div class="row">
-      	<h3>Autonomous Differential Equation</h3>
-      	<b>x'(t)</b> = <input id="equation" class="equation-input" type="text"></input>
+      	<b>x'(t)</b> = <input id="equation" class="ds-input" type="text"></input>
       	<button class="btn" onclick="demo.plot()">Plot</button>
       </div>
       <div class="row">

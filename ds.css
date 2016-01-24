@@ -12,11 +12,14 @@
 	stroke: #ecf0f1;
 }
 
-.graph {
-    margin: 20px;
-    width: 700px;
-    height: 700px;
+.ds-graph {
 	background-color: #404040;
+}
+
+.ds-input {
+    font-size: 14px;
+    width: 500px;
+    font-family: Courier New;
 }
 
 .equation-input {
