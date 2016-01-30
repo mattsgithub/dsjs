@@ -243,12 +243,18 @@ window.ds = {version : "1.0"};
 	        data.push({'x' : roots[i], 'y' : 0.0, 'stable' : ds.numeric.is_stable(fn.bind(this), roots[i])});
 	    };
 
-	    if (selection.empty()) {
-	        this._graph.plot_fixed_points(this._name, data, 10.0, "yellow");
+	    if (data.length > 0) {
+	        // Data is not empty
+	        if (selection.empty()) {
+	            this._graph.plot_fixed_points(this._name, data, 10.0, "yellow");
+	        } else {
+	            selection.data(data)
+		                  .attr("cx", (function(d) {return this._graph._xScale(d.x)}).bind(this))
+                          .attr("cy", (function(d) {return this._graph._yScale(d.y)}).bind(this));
+	        }
 	    } else {
-	        selection.data(data)
-		        .attr("cx", (function(d) {return this._graph._xScale(d.x)}).bind(this))
-                .attr("cy", (function(d) {return this._graph._yScale(d.y)}).bind(this));
+	        // Remove fixed points from graph
+		    selection.remove();
 	    }
     }
 
@@ -315,6 +321,7 @@ window.ds = {version : "1.0"};
        this._svg;
        this._functions = {};
        this._vector_fields = {};
+       this._fixed_points = {};
        this._parameters = {};
        this._svg_dim = {'width' : 350, 'height' : 350};
        this._xScale;
@@ -400,6 +407,10 @@ window.ds = {version : "1.0"};
               for (var k in this._vector_fields) {
                 this._vector_fields[k].zoom(d3.scale);
               }
+
+              for (var k in this._fixed_points) {
+                this._fixed_points[k].zoom(d3.scale);
+              }
          }).bind(this));
 
          // We use the svg selection and instruct it to listen for zooming and panning gestures
@@ -459,14 +470,16 @@ window.ds = {version : "1.0"};
     }
 
     Graph.prototype.register_fixed_points = function(name, value) {
-	var fn = new FixedPoints(name, value, this);
+	    var fn = new FixedPoints(name, value, this);
 	    
-	// Register to lister fo parameter change
-	for (var k in this._parameters) {
-	    if(value.indexOf(k) !== -1) {
-	        this._parameters[k].add_observer(fn);
+	    // Register to lister fo parameter change
+	    for (var k in this._parameters) {
+	        if(value.indexOf(k) !== -1) {
+	            this._parameters[k].add_observer(fn);
+	        }
 	    }
-	}
+
+	    this._fixed_points[name] = fn;
     }
 
     Graph.prototype.register_vector_field = function(name, value) {

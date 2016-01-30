@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css">
     
     <!-- Custom styles for this template -->
-    <!--<link href="index.css" rel="stylesheet">-->
+    <link href="index.css" rel="stylesheet">
 
       <!-- dsjs CSS -->
     <link rel="stylesheet" type="text/css" href="ds.css">
@@ -46,6 +46,9 @@
     <!-- jQuery-UI -->
     <!-- TODO: How to only include slider.js script instead of jquery-ui.js -->
     <script src="bower_components/jquery-ui/jquery-ui.js"></script>
+
+      <!-- Bootstrap -->
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
     <!-- dsjs -->
     <script charset="utf-8" src="ds.js"></script>
@@ -72,13 +75,35 @@
       </div>
       <div class="row">
       	<b>x'(t)</b> = <input id="equation" class="ds-input" type="text"></input>
-      	<button class="btn" onclick="demo.plot()">Plot</button>
+          <button class="btn" onclick="demo.plot()">Plot</button>
+
+          <div class="dropdown">
+            <button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Pick an equation
+            <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li class="dropdown-header">Theta Neuron</li>
+                    <li><a href="#">(1 - Math.cos(x)) + (1 + Math.cos(x))*r</a></li>
+                    <li class="dropdown-header">Saddle-Node Bifurcation (normal form)</li>
+                    <li><a href="#">r + x*x</a></li>
+                    <li class="dropdown-header">Transcritical Bifurcation (normal form)</li>
+                    <li><a href="#">r*x + x*x</a></li>
+                    <li class="dropdown-header">Supercritical Pitchfork Bifurcation (normal form)</li>
+                    <li><a href="#">r*x - x*x*x</a></li>
+                    <li class="dropdown-header">Subcritical Pitchfork Bifurcation (normal form)</li>
+                    <li><a href="#">r*x + x*x*x</a></li>
+                </ul>
+          </div>
+
+
+
       </div>
       <div class="row">
 	r = <span id="parameter"></span>
       	<div id="slider"></div>
       	<hr>
       </div>
+
+
     </div> <!-- /container -->
   </body>
 </html>
